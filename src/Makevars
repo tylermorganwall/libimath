@@ -1,0 +1,38 @@
+# Imath package Makevars
+CMAKE = /usr/local/bin/cmake
+
+# Directories
+IMATH_DIR = /Users/tyler/Desktop/R/ImathR
+INST_DIR = $(IMATH_DIR)/inst
+LIB_DIR = $(INST_DIR)/lib/arm64
+INCLUDE_DIR = $(INST_DIR)/include
+
+
+# Static libraries we need to link against
+# Note that we're using the version suffix pattern that Imath actually creates
+PKG_LIBS = -L$(IMATH_DIR)/lib/arm64 -libImath-3_2
+
+# Required for linking with static libraries
+CFLAGS = $(CPICFLAGS)
+CXXFLAGS = $(CXXPICFLAGS)
+
+# Phony targets
+.PHONY: all imath-build install-imath
+
+# Main target
+all: $(SHLIB)
+$(SHLIB): install-imath
+
+# Build and install Imath
+Imath-build:
+	cd $(IMATH_DIR)/src/Imath/build && $(CMAKE) --build . --config Release
+
+install-imath: Imath-build
+	cd $(IMATH_DIR)/src/Imath/build && $(CMAKE) --install . --config Release
+	# Create directory structure if not exists
+	mkdir -p $(IMATH_DIR)/inst/lib
+	mkdir -p $(IMATH_DIR)/inst/include/Imath
+	mv $(LIB_DIR)/include/Imath/ $(INCLUDE_DIR)
+	mv $(LIB_DIR)/lib/*.a $(LIB_DIR)
+	rm -rf $(LIB_DIR)/lib
+	rm -rf $(LIB_DIR)/include

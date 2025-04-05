@@ -1,0 +1,20 @@
+Package: Imath
+Type: Package
+Title: Vector and Matrix C++ Library for Computer Graphics
+Version: 0.1.0
+Authors@R: c(
+    person(
+      "Jane", "Doe",
+      email = "jane@example.com",
+      role = c("aut", "cre")
+    )
+  )
+Description: Provides a linkable static library for working with 3D vectors and matrices 
+        and other simple but useful mathematical
+        objects, functions, and data types common in computer graphics
+        applications, including the “half” 16-bit floating-point type.
+License: What license is it under?
+Encoding: UTF-8
+LazyData: true
+Config/build/compilation-database: true
+RoxygenNote: 7.3.2

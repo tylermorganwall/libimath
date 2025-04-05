@@ -1,0 +1,14 @@
+^.*\.Rproj$
+^[.].*$
+^.*/[.].*$
+^\\.Rproj\.user$
+^compile_commands\.json$
+^\\.cache$
+^src/.*.md$
+^src/Imath/website$
+^src/Imath/share$
+^src/Imath/src/python$
+^src/Imath/src/pybind11$
+^src/Imath/src/ImathTest$
+^src/Imath/sonar.+$
+^src/Imath/\\..+$
