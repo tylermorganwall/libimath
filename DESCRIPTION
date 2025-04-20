@@ -1,4 +1,4 @@
-Package: Imath
+Package: libimath
 Type: Package
 Title: Vector and Matrix C++ Library for Computer Graphics
 Version: 0.1.0
@@ -13,7 +13,9 @@ Description: Provides a linkable static library for working with 3D vectors and 
         and other simple but useful mathematical
         objects, functions, and data types common in computer graphics
         applications, including the “half” 16-bit floating-point type.
-License: What license is it under?
+License: BSD_3_clause + file LICENSE
+Organization: OpenEXR Project
+SystemRequirements: cmake
 Encoding: UTF-8
 LazyData: true
 Config/build/compilation-database: true
