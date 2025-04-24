@@ -11,3 +11,4 @@ config.status
 configure
 src/*.so
 src/Makevars
+src/*.o
