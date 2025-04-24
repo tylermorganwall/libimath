@@ -6,3 +6,8 @@ compile_commands.json
 .cache
 inst/lib/**/*/
 inst/include/
+config.log
+config.status
+configure
+src/*.so
+src/Makevars

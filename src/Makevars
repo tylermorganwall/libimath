@@ -2,37 +2,28 @@
 CMAKE = /usr/local/bin/cmake
 
 # Directories
-IMATH_DIR = /Users/tyler/Desktop/R/ImathR
-INST_DIR = $(IMATH_DIR)/inst
-LIB_DIR = $(INST_DIR)/lib/arm64
-INCLUDE_DIR = $(INST_DIR)/include
+IMATH_DIR = /Users/tyler/Desktop/R/static_packages/libimath
+INST_DIR = /Users/tyler/Desktop/R/static_packages/libimath/inst
+LIB_DIR = /Users/tyler/Desktop/R/static_packages/libimath/inst/lib/arm64
+INCLUDE_DIR = /Users/tyler/Desktop/R/static_packages/libimath/inst/include
 
+IMATH_LIB = $(LIB_DIR)/libImath-3_2.a
 
 # Static libraries we need to link against
 # Note that we're using the version suffix pattern that Imath actually creates
-PKG_LIBS = -L$(IMATH_DIR)/lib/arm64 -libImath-3_2
+PKG_LIBS = -L$(LIB_DIR) -lImath-3_2
+PKG_CXXFLAGS = -I$(INCLUDE_DIR) -I/Users/tyler/Desktop/R/static_packages/libimath/include
+PKG_CFLAGS = -I$(INCLUDE_DIR) -I/Users/tyler/Desktop/R/static_packages/libimath/include
 
 # Required for linking with static libraries
-CFLAGS = $(CPICFLAGS)
-CXXFLAGS = $(CXXPICFLAGS)
-
-# Phony targets
-.PHONY: all imath-build install-imath
+CFLAGS = $(CFLAGS) $(CPICFLAGS)
+CXXFLAGS = $(CXXFLAGS) $(CXXPICFLAGS)
 
 # Main target
 all: $(SHLIB)
-$(SHLIB): install-imath
 
-# Build and install Imath
-Imath-build:
-	cd $(IMATH_DIR)/src/Imath/build && $(CMAKE) --build . --config Release
+$(SHLIB): $(IMATH_LIB)
 
-install-imath: Imath-build
-	cd $(IMATH_DIR)/src/Imath/build && $(CMAKE) --install . --config Release
-	# Create directory structure if not exists
-	mkdir -p $(IMATH_DIR)/inst/lib
-	mkdir -p $(IMATH_DIR)/inst/include/Imath
-	mv $(LIB_DIR)/include/Imath/ $(INCLUDE_DIR)
-	mv $(LIB_DIR)/lib/*.a $(LIB_DIR)
-	rm -rf $(LIB_DIR)/lib
-	rm -rf $(LIB_DIR)/include
+$(IMATH_LIB):
+	cd /Users/tyler/Desktop/R/static_packages/libimath/src/Imath/build && /usr/local/bin/cmake --build . --config Release
+	cd /Users/tyler/Desktop/R/static_packages/libimath/src/Imath/build && /usr/local/bin/cmake --install . --config Release

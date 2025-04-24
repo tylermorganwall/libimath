@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 AC_PREREQ([2.69])
-AC_INIT([RIMATH], [0.1], [your-email@example.com])
+AC_INIT([libimath], [0.1], [tylermw@gmail.com])
 
 dnl Make sure the src directory exists
 AC_CONFIG_SRCDIR([src/Makevars.in])
@@ -10,6 +10,9 @@ dnl Find R
 if test -z "${R_HOME}"; then
   AC_MSG_ERROR([could not determine R_HOME])
 fi
+
+IMATH_FOLDER="Imath"
+AC_SUBST([IMATH_FOLDER])
 
 dnl Find cmake
 AC_PATH_PROG([CMAKE], [cmake])
@@ -71,7 +74,7 @@ AC_MSG_NOTICE([Using C++ compiler: $CXX])
 AC_MSG_NOTICE([Target architecture: ${TARGET_ARCH}])
 
 dnl Create build directory for IMATH
-mkdir -p src/Imath/build
+mkdir -p src/${IMATH_FOLDER}/build
 
 dnl Get the absolute path to the source directory
 PACKAGE_BASE_DIR=`cd "$(dirname "$0")" && pwd`
@@ -94,7 +97,7 @@ export CMAKE_C_FLAGS="-fPIC"
 export CMAKE_CXX_FLAGS="-fPIC"
 
 dnl Create a special CMake config file to force compiler settings
-cat > src/Imath/build/initial-cache.cmake << EOF
+cat > src/${IMATH_FOLDER}/build/initial-cache.cmake << EOF
 set(CMAKE_C_COMPILER "${CC}" CACHE FILEPATH "C compiler")
 set(CMAKE_CXX_COMPILER "${CXX}" CACHE FILEPATH "C++ compiler")
 set(CMAKE_C_FLAGS "-fPIC" CACHE STRING "C flags")
@@ -107,12 +110,13 @@ EOF
 
 dnl Configure and build Imath
 mkdir -p ${PACKAGE_BASE_DIR}/inst/lib/${TARGET_ARCH}
-cd src/Imath/build
+cd src/${IMATH_FOLDER}/build
 "${CMAKE}" ".." \
 -C "../build/initial-cache.cmake" \
--DCMAKE_INSTALL_PREFIX="${ARCH_LIB_DIR}" \
--DImath_DIR="${IMATH_DIR}" \
--DIMATH_INSTALL_PKG_CONFIG=OFF \
+-DCMAKE_INSTALL_PREFIX="${PACKAGE_BASE_DIR}/inst" \
+-DCMAKE_INSTALL_LIBDIR="lib/${TARGET_ARCH}" \
+-DCMAKE_INSTALL_INCLUDEDIR="include" \
+-DIMATH_INSTALL_PKG_CONFIG=ON \
 -DBUILD_SHARED_LIBS=OFF \
 -DIMATH_IS_SUBPROJECT=ON \
 -DCMAKE_BUILD_TYPE=Release \
