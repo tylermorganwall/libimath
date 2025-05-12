@@ -1,6 +1,8 @@
 # Prepare your package for installation here.
 # Use 'define()' to define configuration variables.
 # Use 'configure_file()' to substitute configuration values.
+is_windows = identical(.Platform$OS.type, "windows")
+is_macos = identical(Sys.info()[['sysname']], "Darwin")
 
 CC_FULL = normalizePath(
   Sys.which(strsplit(r_cmd_config("CC"), " ")[[1]][1]),
@@ -12,7 +14,25 @@ CXX_FULL = normalizePath(
 )
 TARGET_ARCH = Sys.info()[["machine"]]
 PACKAGE_BASE_DIR = normalizePath(getwd(), winslash = "/")
-CMAKE = normalizePath(Sys.which("cmake"), winslash = "/")
+
+syswhich_cmake = Sys.which("cmake")
+
+if (syswhich_cmake != "") {
+  CMAKE = normalizePath(syswhich_cmake, winslash = "/")
+} else {
+  if (is_macos) {
+    cmake_found_in_app_folder = file.exists(
+      "/Applications/CMake.app/Contents/bin/cmake"
+    )
+    if (cmake_found_in_app_folder) {
+      CMAKE = normalizePath("/Applications/CMake.app/Contents/bin/cmake")
+    } else {
+      stop("CMake not found during configuration.")
+    }
+  } else {
+    stop("CMake not found during configuration.")
+  }
+}
 
 define(
   PACKAGE_BASE_DIR = PACKAGE_BASE_DIR,
@@ -71,7 +91,7 @@ cmake_cfg <- c(
   src_dir,
   "-C",
   "../build/initial-cache.cmake",
-  sprintf(r"{-DCMAKE_INSTALL_PREFIX="%s/inst"}", PACKAGE_BASE_DIR),
+  "-DCMAKE_INSTALL_PREFIX=\"../../../inst\"",
   paste0("-DCMAKE_INSTALL_LIBDIR=lib/", TARGET_ARCH),
   "-DCMAKE_INSTALL_INCLUDEDIR=include",
   "-DIMATH_INSTALL_PKG_CONFIG=ON",
@@ -88,5 +108,17 @@ if (status != 0) stop("CMake configure step failed")
 
 setwd(PACKAGE_BASE_DIR)
 
-configure_file("src/Makevars.in")
-configure_file("src/Makevars.win.in")
+lf_ify <- function(path) {
+  if (!file.exists(path)) return(invisible())
+  txt <- readLines(path, warn = FALSE) # strips CR automatically
+  writeLines(txt, path, sep = "\n", useBytes = TRUE)
+}
+
+if (!is_windows) {
+  configure_file("src/Makevars.in")
+} else {
+  configure_file("src/Makevars.win.in")
+}
+
+lf_ify("src/Makevars")
+lf_ify("src/Makevars.win")
