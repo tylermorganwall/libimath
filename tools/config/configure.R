@@ -9,7 +9,7 @@ CC_FULL = normalizePath(
   winslash = "/"
 )
 CXX_FULL = normalizePath(
-  Sys.which(strsplit(r_cmd_config("CXX"), " ")[[1]][1]),
+  Sys.which(strsplit(r_cmd_config("CXX17"), " ")[[1]][1]), #17 ensures C++ compiler is chosen
   winslash = "/"
 )
 TARGET_ARCH = Sys.info()[["machine"]]
@@ -53,8 +53,8 @@ writeLines(
   sprintf(
     r"-{set(CMAKE_C_COMPILER "%s" CACHE FILEPATH "C compiler")
 set(CMAKE_CXX_COMPILER "%s" CACHE FILEPATH "C++ compiler")
-set(CMAKE_C_FLAGS "-fPIC -fvisibility=hidden" CACHE STRING "C flags")
-set(CMAKE_CXX_FLAGS "-fPIC -fvisibility=hidden -fvisibility-inlines-hidden" CACHE STRING "C++ flags")
+set(CMAKE_C_FLAGS "-g -fPIC -fvisibility=hidden" CACHE STRING "C flags")
+set(CMAKE_CXX_FLAGS "-g -fPIC -fvisibility=hidden -fvisibility-inlines-hidden" CACHE STRING "C++ flags")
 set(CMAKE_POSITION_INDEPENDENT_CODE ON CACHE BOOL "Position independent code")
 set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Build type")
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libs")
