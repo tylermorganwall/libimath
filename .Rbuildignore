@@ -22,3 +22,4 @@
 ^inst/lib/.+$
 ^LICENSE\.md$
 ^\.cache$
+^\.github$
