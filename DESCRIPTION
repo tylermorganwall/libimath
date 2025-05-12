@@ -1,6 +1,6 @@
 Package: libimath
 Type: Package
-Title: Vector and Matrix Static Library for Computer Graphics
+Title: Computer Graphics Vector and Matrix Static Library
 Version: 0.1.0
 Authors@R: c(
     person(
@@ -9,9 +9,9 @@ Authors@R: c(
       role = c("aut", "cre")
     )
   )
-Description: Provides a linkable static library for working with 3D vectors and matrices 
-        and other simple but useful mathematical
-        objects, functions, and data types common in computer graphics
+Description: Provides a static library for 'Imath' 
+        (see <https://github.com/AcademySoftwareFoundation/Imath>),
+        a library for functions and data types common in computer graphics
         applications, including a 16-bit floating-point type.
 License: BSD_3_clause + file LICENSE
 SystemRequirements: GNU Make, cmake
