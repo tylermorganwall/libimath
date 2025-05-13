@@ -27,6 +27,15 @@ $(OBJECTS): $(IMATH_LIB)
 $(IMATH_LIB):
 	cd /Users/tyler/Desktop/R/static_packages/libimath/src/Imath/build && /usr/local/Cellar/cmake/3.24.2/bin/cmake --build . --config Release
 	cd /Users/tyler/Desktop/R/static_packages/libimath/src/Imath/build && /usr/local/Cellar/cmake/3.24.2/bin/cmake --install . --config Release
+	cd /Users/tyler/Desktop/R/static_packages/libimath && \
+	"$(R_HOME)/bin/Rscript" tools/fix-line-endings.R src/Imath/build/Makefile \
+    src/Imath/build/config/Makefile \
+    src/Imath/build/src/Imath/Makefile \
+    src/Makevars \
+	src/Imath/build/CMakeFiles/3.30.4/CompilerIdC/CMakeCCompilerId.c \
+    src/Imath/build/CMakeFiles/3.30.4/CompilerIdCXX/CMakeCXXCompilerId.cpp \
+    src/Imath/build/config/ImathConfig.h \
+    inst/include/Imath/ImathConfig.h
 
 clean: 
 	rm -rf /Users/tyler/Desktop/R/static_packages/libimath/src/Imath/build && \
@@ -37,4 +46,3 @@ clean:
 	rm -rf /Users/tyler/Desktop/R/static_packages/libimath/autom4te.cache && \
 	rm -rf /Users/tyler/Desktop/R/static_packages/libimath/configure~
 	rm -rf /Users/tyler/Desktop/R/static_packages/libimath/tools
-	
