@@ -9,7 +9,7 @@ CC_FULL = normalizePath(
   winslash = "/"
 )
 cxx_with_args = strsplit(r_cmd_config("CXX"), split = " ")[[1]]
-
+cat(r_cmd_config("CXX"))
 if (cxx_with_args[1] == "clang") {
   cxx_with_args[1] = "clang++"
 }
