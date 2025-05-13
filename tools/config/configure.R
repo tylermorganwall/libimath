@@ -19,19 +19,17 @@ if (grepl(pattern = "clang", x = r_cmd_config("CXX"))) {
   if (!grepl(pattern = r"{\+\+}", x = cxx_with_args[1])) {
     cxx_with_args[1] = paste0(c(cxx_with_args[1], "++"), collapse = "")
   }
-}
-
-if (Sys.which(cxx_with_args[1]) == "") {
-  cxx_with_args[1] = sub("-[0-9.]+$", "", cxx_with_args[1]) # drop “-15”, “-16”, etc
+  cxx_check = Sys.which(cxx_with_args[1])
+  if (!grepl(pattern = r"{\+\+}", x = cxx_check)) {
+    cxx_check = paste0(c(cxx_check, "++"), collapse = "")
+  }
 } else {
-  cat(Sys.which(cxx_with_args[1]), sep = "\n")
+  cxx_check = Sys.which(cxx_with_args[1])
 }
-
-cat(cxx_with_args[1], sep = "\n")
 
 
 CXX_FULL = normalizePath(
-  Sys.which(cxx_with_args[1]),
+  cxx_check,
   winslash = "/"
 )
 
