@@ -23,6 +23,8 @@ if (grepl(pattern = "clang", x = r_cmd_config("CXX"))) {
 
 if (Sys.which(cxx_with_args[1]) == "") {
   cxx_with_args[1] = sub("-[0-9.]+$", "", cxx_with_args[1]) # drop “-15”, “-16”, etc
+} else {
+  cat(Sys.which(cxx_with_args[1]), sep = "\n")
 }
 
 cat(cxx_with_args[1], sep = "\n")
