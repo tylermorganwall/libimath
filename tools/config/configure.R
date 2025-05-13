@@ -9,14 +9,20 @@ CC_FULL = normalizePath(
   winslash = "/"
 )
 cxx_with_args = strsplit(r_cmd_config("CXX"), split = " ")[[1]]
+cat(r_cmd_config("CXX"), sep = "\n")
 
 clang_flag = ""
 add_pp = FALSE
 if (grepl(pattern = "clang", x = r_cmd_config("CXX"))) {
   clang_flag = "-stdlib=libc++"
+  cat(cxx_with_args[1], sep = "\n")
+
   #Fix ubuntu-clang
   if (!grepl(pattern = r"{\+\+}", x = cxx_with_args[1])) {
     cxx_with_args[1] = paste0(c(cxx_with_args[1], "++"), collapse = "")
+    cat(cxx_with_args[1], sep = "\n")
+  } else {
+    cat("nope", sep = "\n")
   }
 }
 
@@ -25,7 +31,7 @@ CXX_FULL = normalizePath(
   winslash = "/"
 )
 
-cat(CXX_FULL)
+cat(CXX_FULL, sep = "\n")
 TARGET_ARCH = Sys.info()[["machine"]]
 PACKAGE_BASE_DIR = normalizePath(getwd(), winslash = "/")
 
