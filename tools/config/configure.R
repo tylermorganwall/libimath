@@ -14,8 +14,9 @@ clang_flag = ""
 add_pp = FALSE
 if (grepl(pattern = "clang", x = r_cmd_config("CXX"))) {
   clang_flag = "-stdlib=libc++"
+  #Fix ubuntu-clang
   if (!grepl(pattern = r"{\+\+}", x = cxx_with_args[1])) {
-    add_pp = TRUE
+    cxx_with_args[1] = paste0(c(cxx_with_args[1], "++"), collapse = "")
   }
 }
 
@@ -23,10 +24,6 @@ CXX_FULL = normalizePath(
   Sys.which(cxx_with_args[1]),
   winslash = "/"
 )
-#Fix ubuntu-clang
-if (add_pp) {
-  CXX_FULL = paste0(c(CXX_FULL, "++"), collapse = "")
-}
 
 cat(CXX_FULL)
 TARGET_ARCH = Sys.info()[["machine"]]
