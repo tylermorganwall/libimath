@@ -11,14 +11,23 @@ CC_FULL = normalizePath(
 cxx_with_args = strsplit(r_cmd_config("CXX"), split = " ")[[1]]
 
 clang_flag = ""
+add_pp = FALSE
 if (grepl(pattern = "clang", x = r_cmd_config("CXX"))) {
   clang_flag = "-stdlib=libc++"
+  if (!grepl("\\+\\+", cxx_with_args[1])) {
+    add_pp = TRUE
+  }
 }
 
 CXX_FULL = normalizePath(
   Sys.which(cxx_with_args[1]),
   winslash = "/"
 )
+#Fix ubuntu-clang
+if (add_pp) {
+  CXX_FULL = paste0(c(CXX_FULL, "++"), collapse = "")
+}
+
 TARGET_ARCH = Sys.info()[["machine"]]
 PACKAGE_BASE_DIR = normalizePath(getwd(), winslash = "/")
 
