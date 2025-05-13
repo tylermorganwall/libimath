@@ -55,7 +55,7 @@ Authors@R: c(
     person("Yujie", "Shu", role = c("ctb", "cph")),
     person("Yuya", "Asano", role = c("ctb", "cph")),
     person("Zachary", "Klein", role = c("ctb", "cph")),
-    person("Kevin", "Ushey", role = "cph"))
+    person("Kevin", "Ushey", role = "cph")
     ),
   )
 Description: Provides a static library for 'Imath' 
