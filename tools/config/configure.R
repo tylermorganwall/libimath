@@ -18,13 +18,15 @@ if (grepl(pattern = "clang", x = r_cmd_config("CXX"))) {
   #Fix ubuntu-clang
   if (!grepl(pattern = r"{\+\+}", x = cxx_with_args[1])) {
     cxx_with_args[1] = paste0(c(cxx_with_args[1], "++"), collapse = "")
-    cat(cxx_with_args[1], sep = "\n")
   }
 }
 
 if (Sys.which(cxx_with_args[1]) == "") {
   cxx_with_args[1] = sub("-[0-9.]+$", "", cxx_with_args[1]) # drop “-15”, “-16”, etc
 }
+
+cat(cxx_with_args[1], sep = "\n")
+
 
 CXX_FULL = normalizePath(
   Sys.which(cxx_with_args[1]),
