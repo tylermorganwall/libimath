@@ -14,7 +14,7 @@ clang_flag = ""
 add_pp = FALSE
 if (grepl(pattern = "clang", x = r_cmd_config("CXX"))) {
   clang_flag = "-stdlib=libc++"
-  if (!grepl("\\+\\+", cxx_with_args[1])) {
+  if (!grepl(pattern = r"{\+\+}", x = cxx_with_args[1])) {
     add_pp = TRUE
   }
 }
