@@ -8,8 +8,13 @@ CC_FULL = normalizePath(
   Sys.which(strsplit(r_cmd_config("CC"), " ")[[1]][1]),
   winslash = "/"
 )
+cxx_with_args = strsplit(r_cmd_config("CXX"), split = " ")[[1]]
+
+if (cxx_with_args[1] == "clang") {
+  cxx_with_args[1] = "clang++"
+}
 CXX_FULL = normalizePath(
-  Sys.which(strsplit(r_cmd_config("CXX17"), " ")[[1]][1]), #17 ensures C++ compiler is chosen
+  Sys.which(cxx_with_args[1]),
   winslash = "/"
 )
 TARGET_ARCH = Sys.info()[["machine"]]
