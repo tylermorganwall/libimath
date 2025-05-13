@@ -27,7 +27,7 @@ CXX_FULL = normalizePath(
 if (add_pp) {
   CXX_FULL = paste0(c(CXX_FULL, "++"), collapse = "")
 }
-
+cat(CXX_FULL)
 TARGET_ARCH = Sys.info()[["machine"]]
 PACKAGE_BASE_DIR = normalizePath(getwd(), winslash = "/")
 
