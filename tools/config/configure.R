@@ -13,7 +13,9 @@ cxx_with_args = strsplit(r_cmd_config("CXX"), split = " ")[[1]]
 clang_flag = ""
 add_pp = FALSE
 if (grepl(pattern = "clang", x = r_cmd_config("CXX"))) {
-  clang_flag = "-stdlib=libc++"
+  if (is_macos) {
+    clang_flag = "-stdlib=libc++"
+  }
 
   #Fix ubuntu-clang
   if (!grepl(pattern = r"{\+\+}", x = cxx_with_args[1])) {
