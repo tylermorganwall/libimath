@@ -26,7 +26,7 @@ if (grepl(pattern = "clang", x = r_cmd_config("CXX"))) {
   }
   cat(cxx_check, sep = "\n")
 
-  cxx_check = sub("-[0-9.]+$", "", cxx_check[1]) # drop “-15”, “-16”, etc
+  #cxx_check = sub("-[0-9.]+$", "", cxx_check[1]) # drop “-15”, “-16”, etc
   cat(cxx_check, sep = "\n")
 } else {
   cxx_check = Sys.which(cxx_with_args[1])
