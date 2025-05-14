@@ -1,7 +1,7 @@
 Package: libimath
 Type: Package
 Title: 'Imath' Computer Graphics Vector Math Static Library
-Version: 0.1.0
+Version: 3.1.9
 Authors@R: c(
     person(
       "Tyler", "Morgan-Wall",
