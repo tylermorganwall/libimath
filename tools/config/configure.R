@@ -33,10 +33,7 @@ if (grepl(pattern = "clang", x = r_cmd_config("CXX"))) {
 }
 
 
-CXX_FULL = normalizePath(
-  cxx_check,
-  winslash = "/"
-)
+CXX_FULL = cxx_check
 
 cat(CXX_FULL, sep = "\n")
 TARGET_ARCH = Sys.info()[["machine"]]
