@@ -20,11 +20,14 @@ if (grepl(pattern = "clang", x = r_cmd_config("CXX"))) {
     cxx_with_args[1] = paste0(c(cxx_with_args[1], "++"), collapse = "")
   }
   cxx_check = Sys.which(cxx_with_args[1])
-
+  cat(cxx_check, sep = "\n")
   if (!grepl(pattern = r"{\+\+}", x = cxx_check)) {
     cxx_check = paste0(c(cxx_check, "++"), collapse = "")
   }
+  cat(cxx_check, sep = "\n")
+
   cxx_check = sub("-[0-9.]+$", "", cxx_check[1]) # drop “-15”, “-16”, etc
+  cat(cxx_check, sep = "\n")
 } else {
   cxx_check = Sys.which(cxx_with_args[1])
 }
