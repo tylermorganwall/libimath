@@ -10,12 +10,13 @@ CC_FULL = normalizePath(
 )
 cxx_with_args = strsplit(r_cmd_config("CXX"), split = " ")[[1]]
 
+is_clang = grepl("clang", r_cmd_config("CXX"), fixed = TRUE)
+use_libcpp = is_clang && is_macos
+
 clang_flag = ""
 add_pp = FALSE
-if (grepl(pattern = "clang", x = r_cmd_config("CXX"))) {
-  if (is_macos) {
-    clang_flag = "-stdlib=libc++"
-  }
+if (is_clang) {
+  clang_flag = if (use_libcpp) "-stdlib=libc++" else ""
 
   #Fix ubuntu-clang
   if (!grepl(pattern = r"{\+\+}", x = cxx_with_args[1])) {
@@ -33,7 +34,6 @@ if (grepl(pattern = "clang", x = r_cmd_config("CXX"))) {
 } else {
   cxx_check = Sys.which(cxx_with_args[1])
 }
-
 
 CXX_FULL = cxx_check
 
