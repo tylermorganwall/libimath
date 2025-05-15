@@ -9,7 +9,9 @@
 #include <Imath/ImathMatrix.h>
 #include <Imath/ImathVec.h>
 
-extern "C" SEXP C_print_imath_version(void) {
+extern "C" {
+    
+SEXP C_print_imath_version(void) {
     const char version[] = IMATH_VERSION_STRING;
     Rprintf("Imath version %s", version);
     return(R_NilValue);
@@ -22,7 +24,7 @@ extern "C" SEXP C_print_imath_version(void) {
  * @param angles An R numeric vector with 3 elements (rotation angles in radians)
  * @return The rotated point as an R numeric vector
  */
-extern "C" SEXP imath_rotate_point(SEXP point, SEXP angles) {
+SEXP imath_rotate_point(SEXP point, SEXP angles) {
     // Validate inputs
     if (TYPEOF(point) != REALSXP || LENGTH(point) != 3) {
         Rf_error("'point' must be a numeric vector of length 3");
@@ -83,4 +85,6 @@ static const R_CallMethodDef CallEntries[] = {
 void R_init_libimathwrapper(DllInfo *dll) {
     R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
+}
+
 }
