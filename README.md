@@ -1,8 +1,4 @@
----
-output: github_document
----
-
-# Imath
+# libimath
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/tylermorganwall/libimath/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/tylermorganwall/libimath/actions/workflows/R-CMD-check.yaml)
