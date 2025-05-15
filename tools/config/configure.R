@@ -17,25 +17,16 @@ clang_flag = ""
 add_pp = FALSE
 if (is_clang) {
   clang_flag = if (use_libcpp) "-stdlib=libc++" else ""
-
   #Fix ubuntu-clang
   if (!grepl(pattern = r"{\+\+}", x = cxx_with_args[1])) {
     cxx_with_args[1] = paste0(c(cxx_with_args[1], "++"), collapse = "")
   }
   cxx_check = Sys.which(cxx_with_args[1])
-  cat(cxx_check, sep = "\n")
-  if (!grepl(pattern = r"{\+\+}", x = cxx_check)) {
-    cxx_check = paste0(c(cxx_check, "++"), collapse = "")
-  }
-  cat(cxx_check, sep = "\n")
-
-  #cxx_check = sub("-[0-9.]+$", "", cxx_check[1]) # drop “-15”, “-16”, etc
-  cat(cxx_check, sep = "\n")
 } else {
   cxx_check = Sys.which(cxx_with_args[1])
 }
 
-CXX_FULL = cxx_check
+CXX_FULL = normalizePath(cxx_check, winslash = "/")
 
 cat(CXX_FULL, sep = "\n")
 TARGET_ARCH = Sys.info()[["machine"]]
