@@ -4,9 +4,9 @@
 [![R-CMD-check](https://github.com/tylermorganwall/libimath/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/tylermorganwall/libimath/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
-Static build of Academy Software Foundation's [`Imath`](https://github.com/AcademySoftwareFoundation/Imath) C++ library for R. Imath is a basic, light-weight, and efficient C++ representation of 2D and 3D vectors, matrices, and other mathematical objects, functions, and data types common in computer graphics applications, including the `half` 16-bit floating-point type. It is not a generic linear algebra library (like Eigen), but rather one specialized for 2D and 3D transformations common in computer graphics.
+Static build of Academy Software Foundation's [`Imath`](https://github.com/AcademySoftwareFoundation/Imath) C++ library for R. `Imath` is a basic, light-weight, and efficient C++ representation of 2D and 3D vectors, matrices, and other mathematical objects, functions, and data types common in computer graphics applications, including the `half` 16-bit floating-point type. It is not a generic linear algebra library (such as Eigen), but rather one specialized for 2D and 3D transformations common in computer graphics.
 
-The installed package includes a **static** copy of the C++ library (along with CMake config files) so you can use Imath functionality in your package without requiring the user to separately install Imath as a system dependency. This package does not provide an R API--rather, it simply makes the `Imath` C++ library available to other R packages.
+The installed package includes a **static** copy of the C++ library (along with CMake config files) so you can use Imath functionality in your package without requiring the user to separately install `Imath` as a system dependency. This package does not provide an R API--rather, it simply makes the `Imath` C++ library available to other R packages.
 
 `Imath` is maintained by the OpenEXR project, a part of the Academy Software Foundation (ASWF).
 
@@ -23,7 +23,7 @@ The `Imath` library provides:
 - **Euler Angles**: Angle representation operations
 - **Transformations**: Functions for coordinate transformations
 
-For detailed information on the Imath API, please refer to the [Imath documentation](https://imath.readthedocs.io/).
+For detailed information on the `Imath` API, please refer to the [Imath documentation](https://imath.readthedocs.io/).
 
 ---
 
