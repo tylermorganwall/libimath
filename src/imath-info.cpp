@@ -9,7 +9,7 @@
 #include <Imath/ImathMatrix.h>
 #include <Imath/ImathVec.h>
 
-SEXP C_print_imath_version(void) {
+extern "C" SEXP C_print_imath_version(void) {
     const char version[] = IMATH_VERSION_STRING;
     Rprintf("Imath version %s", version);
     return(R_NilValue);
