@@ -5,7 +5,7 @@ output: github_document
 # Imath
 
 <!-- badges: start -->
-[![R-CMD-check](https://github.com/username/imath/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/username/imath/actions/workflows/R-CMD-check.yaml)
+[![R-CMD-check](https://github.com/username/libimath/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/username/libimath/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 Static build of Academy Software Foundation's [`Imath`](https://github.com/AcademySoftwareFoundation/Imath) C++ library for R. Imath is a basic, light-weight, and efficient C++ representation of 2D and 3D vectors, matrices, and other mathematical objects, functions, and data types common in computer graphics applications, including the `half` 16-bit floating-point type. It is not a generic linear algebra library (like Eigen), but rather one specialized for 2D and 3D transformations common in computer graphics.
