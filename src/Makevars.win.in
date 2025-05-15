@@ -13,10 +13,8 @@ IMATH_LIB = $(LIB_DIR)/libImath-3_2.a
 # Note that we're using the version suffix pattern that Imath actually creates
 PKG_LIBS = -L$(LIB_DIR) -lImath-3_2
 PKG_CXXFLAGS = -I$(INCLUDE_DIR) -I@PACKAGE_BASE_DIR@/include
-PKG_CFLAGS = -I$(INCLUDE_DIR) -I@PACKAGE_BASE_DIR@/include
 
 # Required for linking with static libraries
-CFLAGS = $(CFLAGS) $(CPICFLAGS)
 CXXFLAGS = $(CXXFLAGS) $(CXXPICFLAGS)
 
 # Main target
