@@ -1,10 +1,6 @@
 # Imath package Makevars
 CMAKE = @CMAKE@
 
-LIBIMATH_SYSTEM  = @LIBIMATH_SYSTEM@
-LIBIMATH_INCLUDE = @LIBIMATH_INCLUDE@
-LIBIMATH_LINK    = @LIBIMATH_LINK@
-
 # Directories
 IMATH_DIR = @PACKAGE_BASE_DIR@
 INST_DIR = @PACKAGE_BASE_DIR@/inst
@@ -15,11 +11,15 @@ IMATH_LIB = $(LIB_DIR)/libImath-3_2.a
 # Required for linking with static libraries
 CXXFLAGS = $(CXXFLAGS) $(CXXPICFLAGS)
 
-ifeq ($(LIBIMATH_SYSTEM), TRUE) 
-# Link in the system version
-  PKG_CPPFLAGS = $(LIBIMATH_INCLUDE)
-  PKG_CFLAGS   = $(LIBIMATH_INCLUDE)
-  PKG_LIBS     = $(LIBIMATH_LINK)
+ifeq (@LIB_EXISTS@, TRUE) 
+  # Link in the system version
+  # LIB_INCLUDE_LINE defines LIB_INCLUDE
+  # LIB_LINK_LINE defines LIB_LINK
+
+  @LIB_INCLUDE_LINE@
+  @LIB_LINK_LINE@ 
+  PKG_CPPFLAGS = $(LIB_INCLUDE)
+  PKG_LIBS     = $(LIB_LINK)
 else
   # Static libraries we need to link against
   # Note that we're using the version suffix pattern that Imath actually creates

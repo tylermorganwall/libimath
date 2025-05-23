@@ -71,13 +71,13 @@ lib_system = ""
 pkgconfig_path = Sys.which("pkg-config")
 
 lib_exists = FALSE
-lib_include = ""
-lib_link = ""
+LIB_INCLUDE_LINE = ""
+LIB_LINK_LINE = ""
 
 if (nzchar(pkgconfig_path)) {
   pc_status = system2(
     pkgconfig_path,
-    c("--exists", sprintf("%s >= %s", package_name, package_version)),
+    c("--exists", sprintf("'%s >= %s'", package_name, package_version)),
     stdout = FALSE,
     stderr = FALSE
   )
@@ -85,16 +85,28 @@ if (nzchar(pkgconfig_path)) {
   lib_exists = pc_status == 0
 
   if (lib_exists) {
+    message(
+      "*** configure: system libImath exists, using that for building the library"
+    )
+
     lib_include = system2(
       pkgconfig_path,
       c("--cflags", package_name),
       stdout = TRUE
+    )
+    message(
+      sprintf("*** configure: using include path '%s'", lib_include)
     )
     lib_link = system2(
       pkgconfig_path,
       c("--static", "--libs", package_name),
       stdout = TRUE
     )
+    message(
+      sprintf("*** configure: using link path '%s'", lib_link)
+    )
+    LIB_INCLUDE_LINE = sprintf("LIB_INCLUDE = %s", lib_include)
+    LIB_LINK_LINE = sprintf("LIB_LINK = %s", lib_link)
   }
 }
 
@@ -125,9 +137,9 @@ define(
   CMAKE = CMAKE,
   CC_FULL = CC_FULL,
   CXX_FULL = CXX_FULL,
-  LIBDEFLATE_SYSTEM = as.character(lib_exists),
-  LIBDEFLATE_INCLUDE = lib_include,
-  LIBDEFLATE_LINK = lib_link
+  LIB_EXISTS = as.character(lib_exists),
+  LIB_INCLUDE_LINE = LIB_INCLUDE_LINE,
+  LIB_LINK_LINE = LIB_LINK_LINE
 )
 
 # Everything below here is package specific CMake stuff
