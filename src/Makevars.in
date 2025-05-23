@@ -1,21 +1,31 @@
 # Imath package Makevars
 CMAKE = @CMAKE@
 
+LIBIMATH_SYSTEM  = @LIBIMATH_SYSTEM@
+LIBIMATH_INCLUDE = @LIBIMATH_INCLUDE@
+LIBIMATH_LINK    = @LIBIMATH_LINK@
+
 # Directories
 IMATH_DIR = @PACKAGE_BASE_DIR@
 INST_DIR = @PACKAGE_BASE_DIR@/inst
 LIB_DIR = @PACKAGE_BASE_DIR@/inst/lib/@TARGET_ARCH@
 INCLUDE_DIR = @PACKAGE_BASE_DIR@/inst/include
-
 IMATH_LIB = $(LIB_DIR)/libImath-3_2.a
-
-# Static libraries we need to link against
-# Note that we're using the version suffix pattern that Imath actually creates
-PKG_LIBS = -L$(LIB_DIR) -lImath-3_2
-PKG_CXXFLAGS = -I$(INCLUDE_DIR) -I@PACKAGE_BASE_DIR@/include
 
 # Required for linking with static libraries
 CXXFLAGS = $(CXXFLAGS) $(CXXPICFLAGS)
+
+ifeq ($(LIBIMATH_SYSTEM), TRUE) 
+# Link in the system version
+  PKG_CPPFLAGS = $(LIBIMATH_INCLUDE)
+  PKG_CFLAGS   = $(LIBIMATH_INCLUDE)
+  PKG_LIBS     = $(LIBIMATH_LINK)
+else
+  # Static libraries we need to link against
+  # Note that we're using the version suffix pattern that Imath actually creates
+  PKG_LIBS = -L$(LIB_DIR) -lImath-3_2
+  PKG_CXXFLAGS = -I$(INCLUDE_DIR) -I@PACKAGE_BASE_DIR@/include
+endif
 
 # Main target
 all: $(OBJECTS)
@@ -33,6 +43,5 @@ clean:
 	rm -rf @PACKAGE_BASE_DIR@/config.log && \
 	rm -rf @PACKAGE_BASE_DIR@/config.status && \
 	rm -rf @PACKAGE_BASE_DIR@/autom4te.cache && \
-	rm -rf @PACKAGE_BASE_DIR@/configure~
+	rm -rf @PACKAGE_BASE_DIR@/configure~ && \
 	rm -rf @PACKAGE_BASE_DIR@/tools
-	
