@@ -12,3 +12,4 @@ configure
 src/*.so
 src/Makevars
 src/*.o
+/.quarto/
