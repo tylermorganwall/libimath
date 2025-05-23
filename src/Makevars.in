@@ -35,7 +35,7 @@ $(OBJECTS): $(IMATH_LIB)
 $(IMATH_LIB):
 	cd @PACKAGE_BASE_DIR@/src/Imath/build && @CMAKE@ --build . --config Release
 	cd @PACKAGE_BASE_DIR@/src/Imath/build && @CMAKE@ --install . --config Release
-  cd @PACKAGE_BASE_DIR@ && \
+  cd @PACKAGE_BASE_DIR@
 	"$(R_HOME)/bin/Rscript" tools/fix-line-endings.R src/Imath/build/Makefile \
   src/Imath/build/config/Makefile \
   src/Imath/build/src/Imath/Makefile \
