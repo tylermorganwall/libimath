@@ -1,34 +1,44 @@
 # Prepare your package for installation here.
 # Use 'define()' to define configuration variables.
 # Use 'configure_file()' to substitute configuration values.
+
+# Common: Find C/C++ compilers, deal with ccache, find the architecture
+# and find CMake.
 is_windows = identical(.Platform$OS.type, "windows")
 is_macos = identical(Sys.info()[['sysname']], "Darwin")
 
-CC_FULL = normalizePath(
-  Sys.which(strsplit(r_cmd_config("CC"), " ")[[1]][1]),
-  winslash = "/"
-)
-cxx_with_args = strsplit(r_cmd_config("CXX"), split = " ")[[1]]
+CC_RAW = r_cmd_config("CC")
+CXX_RAW = r_cmd_config("CXX")
 
-is_clang = grepl("clang", r_cmd_config("CXX"), fixed = TRUE)
-use_libcpp = is_clang && is_macos
+CC_ARGS = strsplit(CC_RAW, " ")[[1]]
+CXX_ARGS = strsplit(CXX_RAW, " ")[[1]]
 
-clang_flag = ""
-add_pp = FALSE
-if (is_clang) {
-  clang_flag = if (use_libcpp) "-stdlib=libc++" else ""
-  #Fix ubuntu-clang
-  if (!grepl(pattern = r"{\+\+}", x = cxx_with_args[1])) {
-    cxx_with_args[1] = paste0(c(cxx_with_args[1], "++"), collapse = "")
-  }
-  cxx_check = Sys.which(cxx_with_args[1])
+uses_ccache = FALSE
+if (grepl("ccache", CC_ARGS[1])) {
+  uses_ccache = TRUE
+  CC = paste(CC_ARGS[-1], collapse = " ")
 } else {
-  cxx_check = Sys.which(cxx_with_args[1])
+  CC = CC_ARGS[1]
 }
 
-CXX_FULL = normalizePath(cxx_check, winslash = "/")
+if (grepl("ccache", CXX_ARGS[1])) {
+  uses_ccache = TRUE
+  CXX = paste(CXX_ARGS[-1], collapse = " ")
+} else {
+  CXX = CXX_ARGS[1]
+}
 
-cat(CXX_FULL, sep = "\n")
+CC_COMPILER = strsplit(CC, " ")[[1]][1]
+CXX_COMPILER = strsplit(CXX, " ")[[1]][1]
+
+CC_FULL = normalizePath(
+  Sys.which(CC_COMPILER),
+  winslash = "/"
+)
+CXX_FULL = normalizePath(
+  Sys.which(CXX_COMPILER),
+  winslash = "/"
+)
 TARGET_ARCH = Sys.info()[["machine"]]
 PACKAGE_BASE_DIR = normalizePath(getwd(), winslash = "/")
 
@@ -51,16 +61,76 @@ if (syswhich_cmake != "") {
   }
 }
 
+# Now, library specific below
+
+# Use pkg-config (if available) to find a system library
+package_name = "libimath"
+package_version = "3.1.9"
+lib_system = ""
+
+pkgconfig_path = Sys.which("pkg-config")
+
+lib_exists = FALSE
+lib_include = ""
+lib_link = ""
+
+if (nzchar(pkgconfig_path)) {
+  pc_status = system2(
+    pkgconfig_path,
+    c("--exists", sprintf("%s >= %s", package_name, package_version)),
+    stdout = FALSE,
+    stderr = FALSE
+  )
+
+  lib_exists = pc_status == 0
+
+  if (lib_exists) {
+    lib_include = system2(
+      pkgconfig_path,
+      c("--cflags", package_name),
+      stdout = TRUE
+    )
+    lib_link = system2(
+      pkgconfig_path,
+      c("--static", "--libs", package_name),
+      stdout = TRUE
+    )
+  }
+}
+
+
+is_clang = grepl("clang", r_cmd_config("CXX"), fixed = TRUE)
+use_libcpp = is_clang && is_macos
+
+clang_flag = ""
+add_pp = FALSE
+if (is_clang) {
+  clang_flag = if (use_libcpp) "-stdlib=libc++" else ""
+}
+
+if (lib_exists) {
+  lib_dir = substr(strsplit(lib_link, " ")[[1]][1], 3, 500)
+  message(
+    sprintf(
+      "*** configure.R: Found installed version of %s with correct version at '%s', will link in that version to the package.",
+      package_name,
+      lib_dir
+    )
+  )
+}
+
 define(
   PACKAGE_BASE_DIR = PACKAGE_BASE_DIR,
   TARGET_ARCH = TARGET_ARCH,
   CMAKE = CMAKE,
   CC_FULL = CC_FULL,
-  CXX_FULL = CXX_FULL
+  CXX_FULL = CXX_FULL,
+  LIBDEFLATE_SYSTEM = as.character(lib_exists),
+  LIBDEFLATE_INCLUDE = lib_include,
+  LIBDEFLATE_LINK = lib_link
 )
 
-# Everything below here is package specific
-
+# Everything below here is package specific CMake stuff
 if (!dir.exists("src/Imath/build")) {
   dir.create("src/Imath/build")
 }
@@ -85,7 +155,7 @@ set(CMAKE_OSX_ARCHITECTURES "%s" CACHE STRING "Target architecture")}-",
 )
 
 
-inst_dir <- file.path(PACKAGE_BASE_DIR, "inst") # ${PACKAGE_BASE_DIR}/inst
+inst_dir = file.path(PACKAGE_BASE_DIR, "inst") # ${PACKAGE_BASE_DIR}/inst
 dir.create(inst_dir, recursive = TRUE, showWarnings = FALSE)
 
 include_dir = file.path(inst_dir, "include")
@@ -102,10 +172,10 @@ if (!dir.exists(lib_arch)) {
   dir.create(lib_arch)
 }
 
-build_dir <- file.path(PACKAGE_BASE_DIR, "src/Imath/build") # already created earlier
-src_dir <- ".." # evaluated inside build/
+build_dir = file.path(PACKAGE_BASE_DIR, "src/Imath/build") # already created earlier
+src_dir = ".." # evaluated inside build/
 
-cmake_cfg <- c(
+cmake_cfg = c(
   src_dir,
   "-C",
   "../build/initial-cache.cmake",
@@ -121,14 +191,14 @@ cmake_cfg <- c(
 
 setwd(build_dir)
 
-status <- system2(CMAKE, cmake_cfg)
+status = system2(CMAKE, cmake_cfg)
 if (status != 0) stop("CMake configure step failed")
 
 setwd(PACKAGE_BASE_DIR)
 
-lf_ify <- function(path) {
+lf_ify = function(path) {
   if (!file.exists(path)) return(invisible())
-  txt <- readLines(path, warn = FALSE) # strips CR automatically
+  txt = readLines(path, warn = FALSE) # strips CR automatically
   writeLines(txt, path, sep = "\n", useBytes = TRUE)
 }
 
