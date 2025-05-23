@@ -34,7 +34,7 @@ $(OBJECTS): $(IMATH_LIB)
 
 $(IMATH_LIB):
 	cd @PACKAGE_BASE_DIR@/src/Imath/build && @CMAKE@ --build . --config Release && \
-	cd @PACKAGE_BASE_DIR@/src/Imath/build && @CMAKE@ --install . --config Release && \
+	cd @PACKAGE_BASE_DIR@/src/Imath/build && @CMAKE@ --install . --config Release
 
 
 clean: 
