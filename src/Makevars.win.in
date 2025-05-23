@@ -33,17 +33,17 @@ all: $(OBJECTS)
 $(OBJECTS): $(IMATH_LIB)
 
 $(IMATH_LIB):
-	cd @PACKAGE_BASE_DIR@/src/Imath/build && @CMAKE@ --build . --config Release
+  cd @PACKAGE_BASE_DIR@/src/Imath/build && @CMAKE@ --build . --config Release
 	cd @PACKAGE_BASE_DIR@/src/Imath/build && @CMAKE@ --install . --config Release
 	"$(R_HOME)/bin/Rscript" tools/fix-line-endings.R src/Imath/build/Makefile \
-    src/Imath/build/config/Makefile \
-    src/Imath/build/src/Imath/Makefile \
-    src/Makevars \
-	  src/Imath/build/CMakeFiles/3.30.4/CompilerIdC/CMakeCCompilerId.c \
-    src/Imath/build/CMakeFiles/3.30.4/CompilerIdCXX/CMakeCXXCompilerId.cpp \
-    src/Imath/build/config/ImathConfig.h \
-    inst/include/Imath/ImathConfig.h
-    
+  src/Imath/build/config/Makefile \
+  src/Imath/build/src/Imath/Makefile \
+  src/Makevars \
+	src/Imath/build/CMakeFiles/3.30.4/CompilerIdC/CMakeCCompilerId.c \
+  src/Imath/build/CMakeFiles/3.30.4/CompilerIdCXX/CMakeCXXCompilerId.cpp \
+  src/Imath/build/config/ImathConfig.h \
+  inst/include/Imath/ImathConfig.h
+
 clean: 
 	rm -rf @PACKAGE_BASE_DIR@/src/Imath/build && \
 	rm -rf @PACKAGE_BASE_DIR@/src/Makevars && \
