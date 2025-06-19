@@ -1,12 +1,13 @@
 Package: libimath
 Type: Package
 Title: 'Imath' Computer Graphics Linear Algebra Static Library
-Version: 3.1.9-1
+Version: 3.1.9-2
 Authors@R: c(
     person(
       "Tyler", "Morgan-Wall",
       email = "tylermw@gmail.com",
-      role = c("aut", "cre")
+      role = c("aut", "cre"),
+	  comment = c(ORCID = "0000-0002-3131-3814")
     ),
     person("Andrew", "Kunz", role = c("ctb", "cph")),
     person("Antonio", "Rojas", role = c("ctb", "cph")),
