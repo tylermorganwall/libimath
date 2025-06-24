@@ -18,8 +18,8 @@ ifeq (@LIB_EXISTS@, TRUE)
 
   @LIB_INCLUDE_LINE@
   @LIB_LINK_LINE@ 
-  PKG_CPPFLAGS = $(LIB_INCLUDE)
-  PKG_LIBS     = $(LIB_LINK)
+  PKG_CPPFLAGS = -I$(LIB_INCLUDE)
+  PKG_LIBS     = -L$(LIB_LINK)
 else
   # Static libraries we need to link against
   # Note that we're using the version suffix pattern that Imath actually creates
