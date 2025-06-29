@@ -11,15 +11,12 @@ IMATH_LIB = $(LIB_DIR)/libImath-3_2.a
 # Required for linking with static libraries
 CXXFLAGS = $(CXXFLAGS) $(CXXPICFLAGS)
 
-ifeq (@LIB_EXISTS@, TRUE) 
-  # Link in the system version
-  # LIB_INCLUDE_LINE defines LIB_INCLUDE
-  # LIB_LINK_LINE defines LIB_LINK
+@LIB_INCLUDE_ASSIGN@
+@LIB_LINK_ASSIGN@
 
-  @LIB_INCLUDE_LINE@
-  @LIB_LINK_LINE@ 
-  PKG_CPPFLAGS = -I$(LIB_INCLUDE)
-  PKG_LIBS     = -L$(LIB_LINK)
+ifeq (@LIB_EXISTS@, TRUE) 
+  PKG_CPPFLAGS = $(LIB_INCLUDE)
+  PKG_LIBS     = $(LIB_LINK) -lImath-3_2
 else
   # Static libraries we need to link against
   # Note that we're using the version suffix pattern that Imath actually creates

@@ -41,8 +41,8 @@ lib_system = ""
 pkgconfig_path = Sys.which("pkg-config")
 
 lib_exists = FALSE
-LIB_INCLUDE_LINE = ""
-LIB_LINK_LINE = ""
+LIB_INCLUDE_ASSIGN = ""
+LIB_LINK_ASSIGN = ""
 
 if (nzchar(pkgconfig_path)) {
 	pc_status = system2(
@@ -56,36 +56,79 @@ if (nzchar(pkgconfig_path)) {
 
 	if (lib_exists) {
 		message(
-			"*** configure: system libImath-3_2 exists, using that for building the library"
+			sprintf(
+				"*** configure: system %s exists, using that for building the library",
+				static_library_name
+			)
+		)
+		quote_paths = function(pkgconfig_output, prefix = "-I") {
+			include_dirs = strsplit(
+				trimws(gsub(prefix, "", pkgconfig_output, fixed = TRUE)),
+				"\\s+"
+			)[[1]]
+
+			if (length(include_dirs) == 1) {
+				if (include_dirs == "") {
+					return("")
+				}
+			}
+
+			return(
+				paste(
+					paste0(
+						prefix,
+						vapply(
+							include_dirs,
+							shQuote,
+							"character"
+						)
+					),
+					collapse = " "
+				)
+			)
+		}
+
+		lib_include = quote_paths(
+			system2(
+				pkgconfig_path,
+				c("--cflags", package_name),
+				stdout = TRUE
+			),
+			prefix = "-I"
 		)
 
-		lib_include = system2(
-			pkgconfig_path,
-			c("--cflags", package_name),
-			stdout = TRUE
-		)
-		#Remove -I
-		if (substr(lib_include, 1, 2) == "-I") {
-			lib_include = substr(lib_include, 3, 1000)
-		}
 		message(
 			sprintf("*** configure: using include path '%s'", lib_include)
 		)
 
-		lib_link = system2(
-			pkgconfig_path,
-			c("--static", "--libs", package_name),
-			stdout = TRUE
+		lib_link = quote_paths(
+			system2(
+				pkgconfig_path,
+				c("--libs-only-L", package_name),
+				stdout = TRUE
+			),
+			prefix = "-L"
 		)
-		#Remove -L
-		if (substr(lib_link, 1, 2) == "-L") {
-			lib_link = substr(lib_link, 3, 1000)
-		}
 
-		LIB_INCLUDE_LINE = sprintf("LIB_INCLUDE = %s", lib_include)
-		LIB_LINK_LINE = sprintf("LIB_LINK = %s", lib_link)
+		message(
+			sprintf(
+				"*** configure: using link path '%s'",
+				lib_link
+			)
+		)
+		if (nzchar(lib_include)) {
+			LIB_INCLUDE_ASSIGN = sprintf('LIB_INCLUDE = %s', lib_include) #This should already have -I
+		}
+		if (nzchar(lib_link)) {
+			LIB_LINK_ASSIGN = sprintf('LIB_LINK = %s', lib_link) #This should already have -L
+		}
+	} else {
+		message(sprintf("*** %s not found by pkg-config", package_name))
 	}
+} else {
+	message("*** pkg-config not available, skipping to common locations")
 }
+
 
 if (!lib_exists) {
 	fallback_prefixes = c(
@@ -114,8 +157,15 @@ if (!lib_exists) {
 				prefix,
 				"include"
 			)
-			LIB_INCLUDE_LINE = sprintf("LIB_INCLUDE = %s", lib_include)
-			LIB_LINK_LINE = sprintf("LIB_LINK = %s", lib_link)
+			if (nzchar(lib_include)) {
+				LIB_INCLUDE_ASSIGN = sprintf(
+					'LIB_INCLUDE = -I"%s"',
+					lib_include
+				) #This doesn't have -I yet
+			}
+			if (nzchar(lib_link)) {
+				LIB_LINK_ASSIGN = sprintf('LIB_LINK = -L"%s"', lib_link) #This doesn't have -L yet
+			}
 			break
 		}
 	}
@@ -147,8 +197,8 @@ define(
 	TARGET_ARCH = TARGET_ARCH,
 	CMAKE = CMAKE,
 	LIB_EXISTS = as.character(lib_exists),
-	LIB_INCLUDE_LINE = LIB_INCLUDE_LINE,
-	LIB_LINK_LINE = LIB_LINK_LINE
+	LIB_INCLUDE_ASSIGN = LIB_INCLUDE_ASSIGN,
+	LIB_LINK_ASSIGN = LIB_LINK_ASSIGN
 )
 
 # Everything below here is package specific CMake stuff
