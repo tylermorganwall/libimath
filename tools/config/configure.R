@@ -67,10 +67,11 @@ if (nzchar(pkgconfig_path)) {
 				"\\s+"
 			)[[1]]
 
-			if (length(include_dirs) == 1) {
-				if (include_dirs == "") {
-					return("")
-				}
+			if (length(include_dirs) == 0) {
+				return("")
+			}
+			if (length(include_dirs) == 1 && include_dirs == "") {
+				return("")
 			}
 
 			return(

@@ -1,7 +1,7 @@
 Package: libimath
 Type: Package
 Title: 'Imath' Computer Graphics Linear Algebra Static Library
-Version: 3.1.9-3
+Version: 3.1.9-4
 Authors@R: c(
     person(
       "Tyler", "Morgan-Wall",
