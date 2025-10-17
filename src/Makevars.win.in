@@ -14,7 +14,7 @@ CXXFLAGS = $(CXXFLAGS) $(CXXPICFLAGS)
 @LIB_INCLUDE_ASSIGN@
 @LIB_LINK_ASSIGN@
 
-ifeq (@LIB_EXISTS@, TRUE) 
+ifeq (@LIB_EXISTS@, TRUE)
   PKG_CPPFLAGS = $(LIB_INCLUDE)
   PKG_LIBS     = $(LIB_LINK) -lImath-3_2
 else
@@ -37,12 +37,12 @@ $(IMATH_LIB):
 	src/Imath/build/config/Makefile \
 	src/Imath/build/src/Imath/Makefile \
 	src/Makevars \
-	src/Imath/build/CMakeFiles/3.30.4/CompilerIdC/CMakeCCompilerId.c \
-	src/Imath/build/CMakeFiles/3.30.4/CompilerIdCXX/CMakeCXXCompilerId.cpp \
+	src/Imath/build/CMakeFiles/*/CompilerIdC/CMakeCCompilerId.c \
+	src/Imath/build/CMakeFiles/*/CompilerIdCXX/CMakeCXXCompilerId.cpp \
 	src/Imath/build/config/ImathConfig.h \
 	inst/include/Imath/ImathConfig.h
 
-clean: 
+clean:
 	rm -rf @PACKAGE_BASE_DIR@/src/Imath/build && \
 	rm -rf @PACKAGE_BASE_DIR@/src/Makevars && \
 	rm -rf @PACKAGE_BASE_DIR@/src/Makevars.win && \
