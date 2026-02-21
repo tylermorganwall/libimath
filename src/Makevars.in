@@ -30,14 +30,12 @@ all: $(OBJECTS)
 $(OBJECTS): $(IMATH_LIB)
 
 $(IMATH_LIB):
-	cd @PACKAGE_BASE_DIR@/src/Imath/build && @CMAKE@ --build . --config Release && \
-	cd @PACKAGE_BASE_DIR@/src/Imath/build && @CMAKE@ --install . --config Release
+	cd @PACKAGE_BASE_DIR@/src/Imath/build-cran && @CMAKE@ --build . --config Release && \
+	cd @PACKAGE_BASE_DIR@/src/Imath/build-cran && @CMAKE@ --install . --config Release
 
 
 clean: 
-	rm -rf @PACKAGE_BASE_DIR@/src/Imath/build && \
-	rm -rf @PACKAGE_BASE_DIR@/src/Makevars && \
-	rm -rf @PACKAGE_BASE_DIR@/src/Makevars.win && \
+	rm -rf @PACKAGE_BASE_DIR@/src/Imath/build-cran && \
 	rm -rf @PACKAGE_BASE_DIR@/config.log && \
 	rm -rf @PACKAGE_BASE_DIR@/config.status && \
 	rm -rf @PACKAGE_BASE_DIR@/autom4te.cache && \

@@ -30,22 +30,20 @@ all: $(OBJECTS)
 $(OBJECTS): $(IMATH_LIB)
 
 $(IMATH_LIB):
-	cd @PACKAGE_BASE_DIR@/src/Imath/build && @CMAKE@ --build . --config Release && \
-	cd @PACKAGE_BASE_DIR@/src/Imath/build && @CMAKE@ --install . --config Release && \
+	cd @PACKAGE_BASE_DIR@/src/Imath/build-cran && @CMAKE@ --build . --config Release && \
+	cd @PACKAGE_BASE_DIR@/src/Imath/build-cran && @CMAKE@ --install . --config Release
 	cd @PACKAGE_BASE_DIR@ && \
-	"$(R_HOME)/bin/Rscript" tools/fix-line-endings.R src/Imath/build/Makefile \
-	src/Imath/build/config/Makefile \
-	src/Imath/build/src/Imath/Makefile \
+	"$(R_HOME)/bin/Rscript" tools/fix-line-endings.R src/Imath/build-cran/Makefile \
+	src/Imath/build-cran/config/Makefile \
+	src/Imath/build-cran/src/Imath/Makefile \
 	src/Makevars \
-	src/Imath/build/CMakeFiles/*/CompilerIdC/CMakeCCompilerId.c \
-	src/Imath/build/CMakeFiles/*/CompilerIdCXX/CMakeCXXCompilerId.cpp \
-	src/Imath/build/config/ImathConfig.h \
+	src/Imath/build-cran/CMakeFiles/*/CompilerIdC/CMakeCCompilerId.c \
+	src/Imath/build-cran/CMakeFiles/*/CompilerIdCXX/CMakeCXXCompilerId.cpp \
+	src/Imath/build-cran/config/ImathConfig.h \
 	inst/include/Imath/ImathConfig.h
 
 clean:
-	rm -rf @PACKAGE_BASE_DIR@/src/Imath/build && \
-	rm -rf @PACKAGE_BASE_DIR@/src/Makevars && \
-	rm -rf @PACKAGE_BASE_DIR@/src/Makevars.win && \
+	rm -rf @PACKAGE_BASE_DIR@/src/Imath/build-cran && \
 	rm -rf @PACKAGE_BASE_DIR@/config.log && \
 	rm -rf @PACKAGE_BASE_DIR@/config.status && \
 	rm -rf @PACKAGE_BASE_DIR@/autom4te.cache && \
