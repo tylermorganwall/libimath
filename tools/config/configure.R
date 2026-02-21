@@ -173,21 +173,6 @@ if (!lib_exists) {
 }
 
 
-is_clang = grepl("clang", r_cmd_config("CXX"), fixed = TRUE)
-use_libcpp = is_clang && is_macos
-
-cxx20 = Sys.getenv("CXX20", unset = "")
-cxx = Sys.getenv("CXX", unset = "")
-toolchain = paste(cxx20, cxx)
-
-use_libcxx = grepl("-stdlib=libc\\+\\+", toolchain)
-
-clang_flag = ""
-add_pp = FALSE
-if (is_clang) {
-	clang_flag = if (use_libcpp) "-stdlib=libc++" else ""
-}
-
 if (lib_exists) {
 	lib_dir = substr(strsplit(lib_link, " ")[[1]][1], 3, 500)
 	message(
@@ -237,12 +222,40 @@ if (is_macos) {
 }
 writeLines(cache_lines, file_cache)
 
-cxx20 = Sys.getenv("CXX20", unset = "")
-cxx = Sys.getenv("CXX", unset = "")
-toolchain = paste(cxx20, cxx)
+read_config_value = function(key) {
+	value = r_cmd_config(key)
+	if (is.null(value)) {
+		return("")
+	}
+	trimws(paste(value, collapse = " "))
+}
 
-use_libcxx = grepl("-stdlib=libc\\+\\+", toolchain)
-is_clang = grepl("clang\\+\\+", toolchain) || grepl("\\bclang\\b", toolchain)
+first_non_empty = function(values) {
+	values = trimws(values)
+	values = values[nzchar(values)]
+	if (length(values) == 0) {
+		return("")
+	}
+	values[[1]]
+}
+
+cc_cmd = first_non_empty(c(
+	Sys.getenv("CC", unset = ""),
+	read_config_value("CC")
+))
+
+cxx_cmd = first_non_empty(c(
+	Sys.getenv("CXX20", unset = ""),
+	Sys.getenv("CXX17", unset = ""),
+	Sys.getenv("CXX14", unset = ""),
+	Sys.getenv("CXX11", unset = ""),
+	Sys.getenv("CXX", unset = ""),
+	read_config_value("CXX20"),
+	read_config_value("CXX17"),
+	read_config_value("CXX14"),
+	read_config_value("CXX11"),
+	read_config_value("CXX")
+))
 
 inst_dir = file.path(PACKAGE_BASE_DIR, "inst")
 dir.create(inst_dir, recursive = TRUE, showWarnings = FALSE)
@@ -261,15 +274,19 @@ cmake_cfg = c(
 	"-DCMAKE_POSITION_INDEPENDENT_CODE=ON"
 )
 
-if (use_libcxx) {
-	cmake_cfg = c(cmake_cfg, "-DCMAKE_CXX_COMPILER_ARG1=-stdlib=libc++")
-} else if (is_clang && !is_macos) {
-	cmake_cfg = c(cmake_cfg, "-DCMAKE_CXX_COMPILER_ARG1=-stdlib=libstdc++")
+cmake_env = character()
+if (nzchar(cc_cmd)) {
+	cmake_env = c(cmake_env, paste0("CC=", shQuote(cc_cmd)))
+	message(sprintf("*** configure: CMake CC='%s'", cc_cmd))
+}
+if (nzchar(cxx_cmd)) {
+	cmake_env = c(cmake_env, paste0("CXX=", shQuote(cxx_cmd)))
+	message(sprintf("*** configure: CMake CXX='%s'", cxx_cmd))
 }
 
 oldwd = getwd()
 setwd(build_dir)
-status = system2(CMAKE, cmake_cfg)
+status = system2(CMAKE, cmake_cfg, env = cmake_env)
 setwd(oldwd)
 if (status != 0) {
 	stop("CMake configure step failed")
