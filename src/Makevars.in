@@ -1,5 +1,4 @@
 # Imath package Makevars
-CXX_STD = CXX17
 CMAKE = @CMAKE@
 
 # Directories
@@ -8,6 +7,13 @@ INST_DIR = @PACKAGE_BASE_DIR@/inst
 LIB_DIR = @PACKAGE_BASE_DIR@/inst/lib/@TARGET_ARCH@
 INCLUDE_DIR = @PACKAGE_BASE_DIR@/inst/include
 IMATH_LIB = $(LIB_DIR)/libImath-3_2.a
+IMATH_RUNTIME_LINK_FLAGS_FILE = $(LIB_DIR)/libimath-runtime-link-flags
+ifneq ($(wildcard $(IMATH_RUNTIME_LINK_FLAGS_FILE)),)
+  IMATH_RUNTIME_LINK_FLAGS = $(shell cat "$(IMATH_RUNTIME_LINK_FLAGS_FILE)")
+else
+  IMATH_RUNTIME_LINK_FLAGS =
+endif
+PKG_CXXFLAGS = @MAKE_CXX_FLAGS@
 
 # Required for linking with static libraries
 CXXFLAGS = $(CXXFLAGS) $(CXXPICFLAGS)
@@ -15,14 +21,14 @@ CXXFLAGS = $(CXXFLAGS) $(CXXPICFLAGS)
 @LIB_INCLUDE_ASSIGN@
 @LIB_LINK_ASSIGN@
 
-ifeq (@LIB_EXISTS@, TRUE) 
-  PKG_CPPFLAGS = $(LIB_INCLUDE)
-  PKG_LIBS     = $(LIB_LINK) -lImath-3_2
+ifeq (@LIB_EXISTS@, TRUE)
+  PKG_CPPFLAGS = @MAKE_CXX_STANDARD@ $(LIB_INCLUDE)
+  PKG_LIBS     = $(LIB_LINK) -lImath-3_2 $(IMATH_RUNTIME_LINK_FLAGS) $(SAN_LIBS)
 else
   # Static libraries we need to link against
   # Note that we're using the version suffix pattern that Imath actually creates
-  PKG_LIBS = -L$(LIB_DIR) -lImath-3_2
-  PKG_CXXFLAGS = -I$(INCLUDE_DIR) -I@PACKAGE_BASE_DIR@/include
+  PKG_CPPFLAGS = @MAKE_CXX_STANDARD@ -I$(INCLUDE_DIR) -I@PACKAGE_BASE_DIR@/include
+  PKG_LIBS = -L$(LIB_DIR) -lImath-3_2 $(IMATH_RUNTIME_LINK_FLAGS) $(SAN_LIBS)
 endif
 
 # Main target

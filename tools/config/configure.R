@@ -239,19 +239,53 @@ first_non_empty = function(values) {
   values[[1]]
 }
 
+extract_compiler_flags = function(cmd) {
+  tokens = strsplit(trimws(cmd), "\\s+")[[1]]
+  if (length(tokens) <= 1) {
+    return("")
+  }
+
+  compiler_tokens = 1
+  compiler_wrappers = c("ccache", "sccache", "distcc")
+  if (
+    basename(tokens[[1]]) %in%
+      compiler_wrappers &&
+      length(tokens) > compiler_tokens
+  ) {
+    compiler_tokens = compiler_tokens + 1
+  }
+  paste(tokens[-seq_len(compiler_tokens)], collapse = " ")
+}
+
+compiler_flags_include_standard = function(flags) {
+  any(grepl("^(--std=|-std=|/std:)", split_compiler_flags(flags)))
+}
+
+split_compiler_flags = function(flags) {
+  flags = unlist(strsplit(trimws(flags), "\\s+"))
+  flags[nzchar(flags)]
+}
+
 cc_cmd = first_non_empty(c(
   Sys.getenv("CC", unset = ""),
   read_config_value("CC")
 ))
 
 cxx_cmd = first_non_empty(c(
-  Sys.getenv("CXX17", unset = ""),
-  Sys.getenv("CXX20", unset = ""),
   Sys.getenv("CXX", unset = ""),
-  read_config_value("CXX17"),
-  read_config_value("CXX20"),
   read_config_value("CXX")
 ))
+
+make_cxx_flags = extract_compiler_flags(cxx_cmd)
+
+define(
+  MAKE_CXX_FLAGS = make_cxx_flags,
+  MAKE_CXX_STANDARD = if (compiler_flags_include_standard(make_cxx_flags)) {
+    ""
+  } else {
+    "-std=gnu++17"
+  }
+)
 
 inst_dir = file.path(PACKAGE_BASE_DIR, "inst")
 dir.create(inst_dir, recursive = TRUE, showWarnings = FALSE)

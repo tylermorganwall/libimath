@@ -7,6 +7,11 @@ lib_dir = normalizePath(args[[1]], winslash = "/", mustWork = TRUE)
 archive = file.path(lib_dir, "libImath-3_2.a")
 metadata_file = file.path(lib_dir, "libimath-runtime-link-flags")
 
+split_flags = function(x) {
+  flags = unlist(strsplit(trimws(paste(x, collapse = " ")), "\\s+"))
+  unique(flags[nzchar(flags)])
+}
+
 read_symbols = function(path) {
   if (!file.exists(path)) {
     return(character())
@@ -23,29 +28,30 @@ read_symbols = function(path) {
   )
 }
 
-append_unique = function(x, value) {
-  unique(c(x, value))
+has_symbol = function(symbols, pattern) {
+  any(grepl(pattern, symbols, fixed = TRUE))
 }
 
-symbols = read_symbols(archive)
-has_symbol = function(pattern) {
-  any(grepl(pattern, symbols, fixed = TRUE))
+append_unique = function(x, value) {
+  unique(c(x, value))
 }
 
 is_windows = identical(.Platform$OS.type, "windows")
 is_macos = identical(Sys.info()[["sysname"]], "Darwin")
 
+symbols = read_symbols(archive)
+
 runtime_flags = character()
-if (!is_windows && !is_macos && has_symbol("_ZNSt3__1")) {
+if (!is_windows && !is_macos && has_symbol(symbols, "_ZNSt3__1")) {
   runtime_flags = append_unique(runtime_flags, "-lc++")
 }
-if (!is_windows && has_symbol("__ubsan_handle")) {
+if (!is_windows && has_symbol(symbols, "__ubsan_handle")) {
   runtime_flags = append_unique(runtime_flags, "-fsanitize=undefined")
 }
-if (!is_windows && has_symbol("__asan_")) {
+if (!is_windows && has_symbol(symbols, "__asan_")) {
   runtime_flags = append_unique(runtime_flags, "-fsanitize=address")
 }
-if (!is_windows && has_symbol("__tsan_")) {
+if (!is_windows && has_symbol(symbols, "__tsan_")) {
   runtime_flags = append_unique(runtime_flags, "-fsanitize=thread")
 }
 
@@ -62,34 +68,42 @@ remove_marked_block = function(lines, begin, end) {
 
   keep = rep(TRUE, length(lines))
   for (idx in seq_along(start)) {
-    matching_stop = stop[stop >= start[[idx]]][[1]]
-    keep[start[[idx]]:matching_stop] = FALSE
+    matching_stop = stop[stop >= start[[idx]]]
+    if (length(matching_stop) > 0) {
+      keep[start[[idx]]:matching_stop[[1]]] = FALSE
+    }
   }
   lines[keep]
 }
 
 patch_pkg_config = function(path, flags) {
-  if (!file.exists(path)) {
+  if (!file.exists(path) || length(flags) == 0) {
     return(invisible(FALSE))
   }
 
   lines = readLines(path, warn = FALSE)
-  private_lines = grep("^Libs\\.private:", lines, value = TRUE)
-  private_flags = trimws(sub("^Libs\\.private:\\s*", "", private_lines))
-  private_flags = unlist(strsplit(paste(private_flags, collapse = " "), "\\s+"))
-  private_flags = private_flags[nzchar(private_flags)]
-  all_flags = unique(c(private_flags, flags))
+  private_idx = grep("^Libs\\.private:", lines)
+  existing_flags = character()
 
-  lines = lines[!grepl("^Libs\\.private:", lines)]
+  if (length(private_idx) > 0) {
+    existing_flags = split_flags(sub(
+      "^Libs\\.private:\\s*",
+      "",
+      lines[[private_idx[[1]]]]
+    ))
+  }
 
-  if (length(all_flags) > 0) {
-    libs_line = grep("^Libs:", lines)
-    if (length(libs_line) > 0) {
-      lines = append(
-        lines,
-        paste("Libs.private:", paste(all_flags, collapse = " ")),
-        after = libs_line[[1]]
-      )
+  merged_flags = paste(unique(c(existing_flags, flags)), collapse = " ")
+  new_line = paste("Libs.private:", merged_flags)
+
+  if (length(private_idx) > 0) {
+    lines[[private_idx[[1]]]] = new_line
+  } else {
+    libs_idx = grep("^Libs:", lines)
+    if (length(libs_idx) > 0) {
+      lines = append(lines, new_line, after = libs_idx[[1]])
+    } else {
+      lines = c(lines, new_line)
     }
   }
 
@@ -97,22 +111,8 @@ patch_pkg_config = function(path, flags) {
   invisible(TRUE)
 }
 
-as_cmake_link_interface = function(flags) {
-  libraries = character()
-  options = character()
-
-  for (flag in flags) {
-    if (startsWith(flag, "-l")) {
-      libraries = append_unique(libraries, sub("^-l", "", flag))
-    } else {
-      options = append_unique(options, flag)
-    }
-  }
-
-  list(
-    libraries = libraries,
-    options = options
-  )
+cmake_quote_list = function(values) {
+  paste(values, collapse = ";")
 }
 
 patch_cmake_targets = function(path, flags) {
@@ -124,38 +124,39 @@ patch_cmake_targets = function(path, flags) {
   end = "# libimath R package runtime link flags end"
   lines = remove_marked_block(readLines(path, warn = FALSE), begin, end)
 
-  if (length(flags) > 0) {
-    cmake_interface = as_cmake_link_interface(flags)
+  link_libraries = flags[grepl("^-l", flags)]
+  link_options = setdiff(flags, link_libraries)
+
+  if (length(link_libraries) > 0 || length(link_options) > 0) {
+    block = c(begin, "if(TARGET Imath::Imath)")
+    if (length(link_libraries) > 0) {
+      block = c(
+        block,
+        "  set_property(TARGET Imath::Imath APPEND PROPERTY",
+        sprintf(
+          '    INTERFACE_LINK_LIBRARIES "%s"',
+          cmake_quote_list(link_libraries)
+        ),
+        "  )"
+      )
+    }
+    if (length(link_options) > 0) {
+      block = c(
+        block,
+        "  set_property(TARGET Imath::Imath APPEND PROPERTY",
+        sprintf(
+          '    INTERFACE_LINK_OPTIONS "%s"',
+          cmake_quote_list(link_options)
+        ),
+        "  )"
+      )
+    }
+    block = c(block, "endif()", end, "")
+
     insert_before = grep(
       "^# Load information for each installed configuration\\.",
       lines
     )
-
-    block = begin
-    if (length(cmake_interface$libraries) > 0) {
-      block = c(
-        block,
-        "set_property(TARGET Imath::Imath APPEND PROPERTY",
-        sprintf(
-          '  INTERFACE_LINK_LIBRARIES "%s"',
-          paste(cmake_interface$libraries, collapse = ";")
-        ),
-        ")"
-      )
-    }
-    if (length(cmake_interface$options) > 0) {
-      block = c(
-        block,
-        "set_property(TARGET Imath::Imath APPEND PROPERTY",
-        sprintf(
-          '  INTERFACE_LINK_OPTIONS "%s"',
-          paste(cmake_interface$options, collapse = ";")
-        ),
-        ")"
-      )
-    }
-    block = c(block, end, "")
-
     if (length(insert_before) > 0) {
       lines = append(lines, block, after = insert_before[[1]] - 1)
     } else {
@@ -167,19 +168,22 @@ patch_cmake_targets = function(path, flags) {
   invisible(TRUE)
 }
 
-patch_pkg_config(file.path(lib_dir, "pkgconfig", "Imath.pc"), runtime_flags)
+pc_files = unique(file.path(
+  c(file.path(lib_dir, "pkgconfig"), lib_dir),
+  "Imath.pc"
+))
+invisible(lapply(pc_files, patch_pkg_config, flags = runtime_flags))
+
 patch_cmake_targets(
   file.path(lib_dir, "cmake", "Imath", "ImathTargets.cmake"),
   runtime_flags
 )
 
-invisible(
-  if (nzchar(runtime_flags_text)) {
-    message(sprintf(
-      "Recorded libImath runtime link flags: %s",
-      runtime_flags_text
-    ))
-  } else {
-    message("No extra libImath runtime link flags detected")
-  }
-)
+if (nzchar(runtime_flags_text)) {
+  message(sprintf(
+    "Recorded libImath runtime link flags: %s",
+    runtime_flags_text
+  ))
+} else {
+  message("No extra libImath runtime link flags detected")
+}

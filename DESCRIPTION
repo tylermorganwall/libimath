@@ -67,5 +67,5 @@ SystemRequirements: GNU Make, cmake
 Encoding: UTF-8
 LazyData: true
 Config/build/compilation-database: true
-RoxygenNote: 7.3.2
 Biarch: TRUE
+Config/roxygen2/version: 8.0.0
