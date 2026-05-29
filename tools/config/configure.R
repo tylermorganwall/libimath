@@ -307,17 +307,17 @@ cmake_cfg = c(
 
 cmake_env = character()
 if (nzchar(cc_cmd)) {
-  cmake_env = c(cmake_env, paste0("CC=", shQuote(cc_cmd)))
+  cmake_env["CC"] = cc_cmd
   message(sprintf("*** configure: CMake CC='%s'", cc_cmd))
 }
 if (nzchar(cxx_cmd)) {
-  cmake_env = c(cmake_env, paste0("CXX=", shQuote(cxx_cmd)))
+  cmake_env["CXX"] = cxx_cmd
   message(sprintf("*** configure: CMake CXX='%s'", cxx_cmd))
 }
 
 oldwd = getwd()
 setwd(build_dir)
-status = system2(CMAKE, cmake_cfg, env = cmake_env)
+status = with_envvar(cmake_env, system2(CMAKE, cmake_cfg))
 setwd(oldwd)
 if (status != 0) {
   stop("CMake configure step failed")
