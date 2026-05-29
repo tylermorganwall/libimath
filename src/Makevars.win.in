@@ -1,4 +1,5 @@
 # Imath package Makevars
+CXX_STD = CXX17
 CMAKE = @CMAKE@
 
 # Directories
@@ -32,6 +33,8 @@ $(OBJECTS): $(IMATH_LIB)
 $(IMATH_LIB):
 	cd @PACKAGE_BASE_DIR@/src/Imath/build-cran && @CMAKE@ --build . --config Release && \
 	cd @PACKAGE_BASE_DIR@/src/Imath/build-cran && @CMAKE@ --install . --config Release
+	cd @PACKAGE_BASE_DIR@ && \
+	"$(R_HOME)/bin/Rscript" tools/write-runtime-metadata.R "$(LIB_DIR)"
 	cd @PACKAGE_BASE_DIR@ && \
 	"$(R_HOME)/bin/Rscript" tools/fix-line-endings.R src/Imath/build-cran/Makefile \
 	src/Imath/build-cran/config/Makefile \
