@@ -1,194 +1,375 @@
+---
+output:
+  github_document:
+    html_preview: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  fig.width = 7,
+  fig.height = 7,
+  fig.show = "hold",
+  out.width = "100%",
+  dpi = 144
+)
+```
+
 # libimath
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/tylermorganwall/libimath/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/tylermorganwall/libimath/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
-Static build of Academy Software Foundation's [`Imath`](https://github.com/AcademySoftwareFoundation/Imath) C++ library for R. `Imath` is a basic, light-weight, and efficient C++ representation of 2D and 3D vectors, matrices, and other mathematical objects, functions, and data types common in computer graphics applications, including the `half` 16-bit floating-point type. It is not a generic linear algebra library (such as Eigen), but rather one specialized for 2D and 3D transformations common in computer graphics.
+`libimath` provides Imath headers and static libraries for R packages that
+need the computer graphics math types used by OpenEXR and related rendering
+software. Imath includes vectors, matrices, bounding boxes, quaternions,
+Euler angles, colors, and the `half` 16-bit floating-point type.
 
-The installed package includes a **static** copy of the C++ library (along with CMake config files) so you can use Imath functionality in your package without requiring the user to separately install `Imath` as a system dependency. This package does not provide an R API--rather, it simply makes the `Imath` C++ library available to other R packages.
+The package is primarily intended for package authors. The R functions are
+small examples that make it easy to verify the library is available, but the
+main purpose of this package is to make Imath available to downstream
+packages without requiring users to install Imath manually.
 
-`Imath` is maintained by the OpenEXR project, a part of the Academy Software Foundation (ASWF).
-
-## Features
-
-The `Imath` library provides:
-
-- **Vectors**: 2D, 3D, and 4D vector representations and operations
-- **Matrices**: 2x2, 3x3, and 4x4 matrix operations
-- **Half Float**: 16-bit floating point type and operations
-- **Quaternions**: Quaternion operations for rotations
-- **Bounding Boxes**: 2D and 3D bounding box representations
-- **Colors**: RGB and RGBA color representations
-- **Euler Angles**: Angle representation operations
-- **Transformations**: Functions for coordinate transformations
-
-For detailed information on the `Imath` API, please refer to the [Imath documentation](https://imath.readthedocs.io/).
-
----
+Imath is maintained by the OpenEXR project, a part of the Academy Software
+Foundation.
 
 ## Installation
 
-```r
+```{r install, eval=FALSE}
 # once released on CRAN
-install.packages("tylermorganwall/libimath")
+install.packages("libimath")
 
 # development version
 remotes::install_github("tylermorganwall/libimath")
 ```
 
-No external libraries are required—the `Imath` static library is built and installed during the R package install.
+## Basic R Usage
 
----
+`libimath` includes a minimal R wrapper around a C++ Imath example. This is
+mostly useful as a smoke test and as a reference for package authors.
 
-## Using the bundled static library in your own packages
+```{r basic-imath}
+library(libimath)
 
-The package installs:
+print_imath_version()
 
-```
-lib/<R_ARCH>/libImath-3_2.a        # static archive (version 3.2)
-lib/<R_ARCH>/cmake/Imath/*         # CMake config files
-include/Imath/*                    # public headers
-```
+point = c(1, 0, 0)
+angles = c(0, pi / 4, 0)
 
-`R_ARCH` can be obtained in R via `Sys.info()[["machine"]]`.
-
-### Makevars-style linkage
-
-The version (3_2) is appended after the library name: add this to link the static library.
-
-```make
-## configure
-IMATH_DIR=$(Rscript -e 'cat(system.file("lib", Sys.info()[["machine"]], package = "libimath"))')
-CPPFLAGS += -I$(IMATH_DIR)/../include
-PKG_LIBS += -L$(IMATH_DIR) -lImath-3_2
+rotated = imath_rotate_point(point, angles)
+rbind(original = point, rotated = rotated)
 ```
 
-### CMake consumers
+The same wrapper can be used to transform many points. This example rotates
+the vertices of a cube with Imath and plots a simple 2D projection.
 
-Call this R code in your configure step to determine the location of the CMake config files:
+```{r rotate-cube}
+cube = as.matrix(expand.grid(
+  x = c(-1, 1),
+  y = c(-1, 1),
+  z = c(-1, 1)
+))
 
-```r
-IMATH_LIB_ARCH = normalizePath(sprintf(
-  "%s/%s",
-  system.file(
-    "lib",
+edges = combn(seq_len(nrow(cube)), 2)
+edges = edges[, colSums(abs(cube[edges[1, ], ] - cube[edges[2, ], ])) == 2]
+
+rotate_points = function(points, angles) {
+  t(apply(points, 1, function(point) {
+    imath_rotate_point(as.numeric(point), angles)
+  }))
+}
+
+project = function(points) {
+  cbind(
+    x = points[, 1] - 0.6 * points[, 3],
+    y = points[, 2] + 0.35 * points[, 3]
+  )
+}
+
+rotated_cube = rotate_points(cube, c(pi / 6, pi / 5, pi / 8))
+
+plot_cube = function(points, title, color) {
+  projected = project(points)
+  plot(
+    projected,
+    type = "n",
+    asp = 1,
+    axes = FALSE,
+    xlab = "",
+    ylab = "",
+    main = title,
+    xlim = c(-2.2, 2.2),
+    ylim = c(-1.8, 1.8)
+  )
+  for (i in seq_len(ncol(edges))) {
+    segment = edges[, i]
+    lines(projected[segment, ], col = color, lwd = 2)
+  }
+  points(projected, pch = 19, col = color)
+}
+
+op = par(mfrow = c(1, 2), mar = c(1, 1, 3, 1))
+plot_cube(cube, "Original", "#333333")
+plot_cube(rotated_cube, "Rotated with Imath", "#2b6eff")
+par(op)
+```
+
+## Using libimath in Another Package
+
+Downstream packages should list `libimath` in `LinkingTo`:
+
+```text
+LinkingTo:
+    libimath
+SystemRequirements: Imath (>= 3.2.0)
+```
+
+The package ships a static archive for convenience, but CRAN packages should
+first try to use a suitable system library. Your `configure` script should
+check the installed Imath version and fall back to the package-provided
+static library when the system library is missing or too old.
+
+Kevin Ushey's R-based `configure.R` pattern is a good fit here. It lets you
+keep the configure logic in R, use the same logic on Unix and Windows, and
+generate `src/Makevars` from `src/Makevars.in`. See the `tools/config.R`
+helper used in this package for a complete implementation.
+
+Your top-level configure scripts can be simple wrappers:
+
+```sh
+#!/usr/bin/env sh
+: "${R_HOME=`R RHOME`}"
+"${R_HOME}/bin/Rscript" tools/config.R configure "$@"
+```
+
+```sh
+#!/usr/bin/env sh
+"${R_HOME}/bin${R_ARCH_BIN}/Rscript.exe" tools/config.R configure "$@"
+```
+
+### Configure Example
+
+This is a compact `tools/config/configure.R` example. It checks for native
+Imath with `pkg-config`, requires a compatible version, and falls back to
+the static archive installed by `libimath`.
+
+```{r configure-example, eval=FALSE}
+options(
+  configure.common = FALSE,
+  configure.platform = FALSE
+)
+
+is_windows = identical(.Platform$OS.type, "windows")
+target_arch = Sys.info()[["machine"]]
+
+imath_min_version = "3.2.0"
+imath_api = "3_2"
+
+quote_path = function(path) {
+  shQuote(
+    normalizePath(path, winslash = "/", mustWork = FALSE),
+    type = if (is_windows) "cmd" else "sh"
+  )
+}
+
+flag_path = function(flag, path) {
+  paste0(flag, quote_path(path))
+}
+
+collapse_flags = function(flags) {
+  flags = flags[nzchar(flags)]
+  paste(flags, collapse = " ")
+}
+
+read_runtime_link_flags = function(path) {
+  if (!file.exists(path)) {
+    return("")
+  }
+
+  flags = unlist(strsplit(
+    trimws(paste(readLines(path, warn = FALSE), collapse = " ")),
+    "\\s+"
+  ))
+  collapse_flags(unique(flags))
+}
+
+pkgconfig = Sys.which("pkg-config")
+
+pkg_config_module = function(modules, version) {
+  if (!nzchar(pkgconfig)) {
+    return("")
+  }
+
+  for (module in modules) {
+    status = system2(
+      pkgconfig,
+      c("--exists", sprintf("%s >= %s", module, version)),
+      stdout = FALSE,
+      stderr = FALSE
+    )
+
+    if (identical(as.integer(status), 0L)) {
+      return(module)
+    }
+  }
+
+  ""
+}
+
+pkg_config_flags = function(args, module) {
+  trimws(paste(
+    system2(pkgconfig, c(args, module), stdout = TRUE),
+    collapse = " "
+  ))
+}
+
+imath_module = pkg_config_module(c("Imath", "libImath"), imath_min_version)
+
+if (nzchar(imath_module)) {
+  message(sprintf("*** configure: using system %s", imath_module))
+
+  IMATH_CPPFLAGS = pkg_config_flags("--cflags", imath_module)
+  IMATH_LIBS = pkg_config_flags("--libs", imath_module)
+} else {
+  message("*** configure: using libimath static library")
+
+  imath_include_root = system.file(
+    "include",
     package = "libimath",
     mustWork = TRUE
+  )
+  imath_include_dir = system.file(
+    "include",
+    "Imath",
+    package = "libimath",
+    mustWork = TRUE
+  )
+  imath_lib_arch = normalizePath(
+    file.path(
+      system.file("lib", package = "libimath", mustWork = TRUE),
+      target_arch
+    ),
+    winslash = "/",
+    mustWork = TRUE
+  )
+
+  imath_runtime_flags = read_runtime_link_flags(file.path(
+    imath_lib_arch,
+    "libimath-runtime-link-flags"
+  ))
+
+  IMATH_CPPFLAGS = collapse_flags(c(
+    flag_path("-I", imath_include_root),
+    flag_path("-I", imath_include_dir)
+  ))
+
+  IMATH_LIBS = collapse_flags(c(
+    flag_path("-L", imath_lib_arch),
+    sprintf("-lImath-%s", imath_api),
+    imath_runtime_flags
+  ))
+}
+
+define(
+  IMATH_CPPFLAGS = IMATH_CPPFLAGS,
+  IMATH_LIBS = IMATH_LIBS
+)
+
+if (is_windows) {
+  configure_file("src/Makevars.win.in")
+} else {
+  configure_file("src/Makevars.in")
+}
+```
+
+### Makevars
+
+Use the configured values in both `src/Makevars.in` and
+`src/Makevars.win.in`:
+
+```make
+PKG_CPPFLAGS = @IMATH_CPPFLAGS@
+PKG_LIBS = @IMATH_LIBS@ $(SAN_LIBS)
+
+OBJECTS = my_imath_wrapper.o R_init_mypackage.o
+
+$(SHLIB): $(OBJECTS)
+```
+
+For the bundled fallback, the library name includes the Imath API suffix:
+
+```make
+-L/path/to/libimath/inst/lib/<R_ARCH> -lImath-3_2
+```
+
+The package also installs CMake config files. If your package configures a
+CMake-based dependency, this R code gives you the Imath CMake config path:
+
+```{r cmake-config-path, eval=FALSE}
+IMATH_LIB_ARCH = normalizePath(
+  file.path(
+    system.file("lib", package = "libimath", mustWork = TRUE),
+    Sys.info()[["machine"]]
   ),
-  Sys.info()[["machine"]]
-))
+  winslash = "/",
+  mustWork = TRUE
+)
 
 IMATH_CMAKE_CONFIG = file.path(IMATH_LIB_ARCH, "cmake", "Imath")
 ```
 
-### Minimal example
+### C++ Example
 
-Below is a minimal example showing how to use this library with R.
+The following `.Call()` example rotates a 3D point using Imath matrix and
+vector types.
 
-```c++
+```cpp
 #define R_NO_REMAP
 
 #include <R.h>
 #include <Rinternals.h>
-#include <R_ext/Rdynload.h>
-#include <R_ext/Print.h> 
 
 #include <Imath/ImathMatrix.h>
 #include <Imath/ImathVec.h>
 
-/**
- * Rotates a 3D point using Imath's matrix operations
- * 
- * @param point An R numeric vector with 3 elements (x, y, z)
- * @param angles An R numeric vector with 3 elements (rotation angles in radians)
- * @return The rotated point as an R numeric vector
- */
-extern "C" SEXP imath_rotate_point(SEXP point, SEXP angles) {
-    // Validate inputs
-    if (TYPEOF(point) != REALSXP || LENGTH(point) != 3) {
-        Rf_error("'point' must be a numeric vector of length 3");
-    }
-    if (TYPEOF(angles) != REALSXP || LENGTH(angles) != 3) {
-        Rf_error("'angles' must be a numeric vector of length 3");
-    }
-    
-    // Extract point coordinates
-    double *point_ptr = REAL(point);
-    Imath::V3f p((float)point_ptr[0], (float)point_ptr[1], (float)point_ptr[2]);
-    
-    // Extract rotation angles
-    double *angles_ptr = REAL(angles);
-    Imath::V3f rot((float)angles_ptr[0], (float)angles_ptr[1], (float)angles_ptr[2]);
-    
-    // Create identity matrix
-    Imath::M44f M;
-    M.makeIdentity();
-    
-    // Create rotation matrix
-    Imath::M44f R;
-    R.makeIdentity();
-    R.rotate(rot);
-    
-    // Apply rotation
-    M = R * M;
-    
-    // Transform the point
-    Imath::V3f result;
-    M.multVecMatrix(p, result);
-    
-    // Create and populate result vector
-    SEXP r_result = PROTECT(Rf_allocVector(REALSXP, 3));
-    REAL(r_result)[0] = (double)result.x;
-    REAL(r_result)[1] = (double)result.y;
-    REAL(r_result)[2] = (double)result.z;
-    
-    // Add names to result vector for R
-    SEXP names = PROTECT(Rf_allocVector(STRSXP, 3));
-    SET_STRING_ELT(names, 0, Rf_mkChar("x"));
-    SET_STRING_ELT(names, 1, Rf_mkChar("y"));
-    SET_STRING_ELT(names, 2, Rf_mkChar("z"));
-    Rf_setAttrib(r_result, R_NamesSymbol, names);
-    
-    UNPROTECT(2);
-    return r_result;
-}
+extern "C" SEXP C_rotate_point(SEXP point_sexp, SEXP angles_sexp) {
+  if (TYPEOF(point_sexp) != REALSXP || LENGTH(point_sexp) != 3) {
+    Rf_error("'point' must be a numeric vector of length 3");
+  }
+  if (TYPEOF(angles_sexp) != REALSXP || LENGTH(angles_sexp) != 3) {
+    Rf_error("'angles' must be a numeric vector of length 3");
+  }
 
-//=== registration ===========================================================
+  const double *point = REAL(point_sexp);
+  const double *angles = REAL(angles_sexp);
 
-static const R_CallMethodDef CallEntries[] = {
-    {"imath_rotate_point", (DL_FUNC) &imath_rotate_point, 2},
-    {NULL, NULL, 0}
-};
+  Imath::V3f p(
+    static_cast<float>(point[0]),
+    static_cast<float>(point[1]),
+    static_cast<float>(point[2])
+  );
+  Imath::V3f rotation(
+    static_cast<float>(angles[0]),
+    static_cast<float>(angles[1]),
+    static_cast<float>(angles[2])
+  );
 
-void R_init_libimathwrapper(DllInfo *dll) {
-    R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
-    R_useDynamicSymbols(dll, FALSE);
-}
+  Imath::M44f transform;
+  transform.makeIdentity();
+  transform.rotate(rotation);
 
-```
+  Imath::V3f result;
+  transform.multVecMatrix(p, result);
 
-And the R code calling this function:
+  SEXP out = PROTECT(Rf_allocVector(REALSXP, 3));
+  REAL(out)[0] = result.x;
+  REAL(out)[1] = result.y;
+  REAL(out)[2] = result.z;
 
-```r
-#' Rotate Point
-#'
-#' @param point A length-3 numeric vector (x, y, z)
-#' @param angles A length-3 numeric vector (rotation angles in radians)
-#' @return The rotated point as an R numeric vector
-#' @export
-#' @examples
-#' # This rotates a point around an angle.
-#' point = c(1.0, 0.0, 0.0)
-#' angles = c(0.0, pi/4, 0.0)
-#' imath_rotate_point(point, angles)
-imath_rotate_point = function(point, angles) {
-  rotated = .Call(
-    "imath_rotate_point",
-    point,
-    angles,
-    PACKAGE = "libimath"
-  )
-  return(rotated)
+  UNPROTECT(1);
+  return out;
 }
 ```
